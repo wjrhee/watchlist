@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import q from 'q';
 import { SQLite } from 'expo';
 
@@ -40,10 +41,10 @@ export default class WatchList extends Base {
       db.transaction((tx) => {
         tx.executeSql(`
           SELECT *
-          FROM watch_lists_stocks
-          INNER JOIN watch_lists ON watch_lists_stocks.watch_list_id = watch_lists.id
-          INNER JOIN stocks ON watch_lists_stocks.stock_id = stocks.id
-          WHERE watch_lists.id = ?
+          FROM ${tables.watchListsStocks}
+          INNER JOIN ${tables.watchLists} ON ${tables.watchListsStocks}.watch_list_id = ${tables.watchLists}.id
+          INNER JOIN ${tables.stocks} ON ${tables.watchListsStocks}.stock_id = ${tables.stocks}.id
+          WHERE ${tables.watchLists}.id = ?
         `, [this.id], (__, { rows }) => {
           const existingStockIds = rows._array.map(({ id }) => id);
           const currentStockIds = this.stocksToWatch.map(({ id }) => id);
@@ -72,59 +73,46 @@ export default class WatchList extends Base {
     return this.stocksToWatch.map((link) => link.ticker());
   }
 
-  static setupTables() {
-    const deferred = q.defer();
+  static loadAll() {
     const db = SQLite.openDatabase('db.db');
+    const deferred = q.defer();
+    let returnValue;
+
     db.transaction((tx) => {
       tx.executeSql(`
-        CREATE TABLE IF NOT EXISTS watch_lists (
-          id INTEGER PRIMARY KEY NOT NULL,
-          name TEXT
-        );
-      `)
+        SELECT *
+        FROM ${tables.watchListsStocks}
+        INNER JOIN ${tables.watchLists} ON ${tables.watchListsStocks}.watch_list_id = ${tables.watchLists}.id
+        INNER JOIN ${tables.stocks} ON ${tables.watchListsStocks}.stock_id = ${tables.stocks}.id
+      `, null, (__, { rows }) => {
+        returnValue = _.reduce(rows._array, (acc, value) => {
+          if (acc[value.watch_list_id]) {
+            acc[value.watch_list_id].stocksToWatch.push({
+              stockToWatchId: value.id,
+              stockId: value.stock_id,
+              ticker: value.ticker
+            });
+          } else {
+            acc[value.watch_list_id] = {
+              name: value.name,
+              id: value.watch_list_id,
+              stocksToWatch: [{
+                stockToWatchId: value.id,
+                stockId: value.stock_id,
+                ticker: value.ticker
+              }]
+            };
+          };
 
-      tx.executeSql(`
-        CREATE TABLE IF NOT EXISTS stocks (
-          id INTEGER PRIMARY KEY NOT NULL,
-          ticker TEXT UNIQUE
-        );
-      `);
-
-      tx.executeSql(`
-        CREATE TABLE IF NOT EXISTS watch_lists_stocks (
-          id INTEGER PRIMARY KEY NOT NULL,
-          watch_list_id INTEGER,
-          stock_id INTEGER,
-          FOREIGN KEY (watch_list_id) REFERENCES watch_lists(id),
-          FOREIGN KEY (stock_id) REFERENCES stocks(id)
-        );
-      `);
-
-      tx.executeSql('select name from sqlite_master', [], (a,b) => {
-        console.log('TABLES');
-        console.log(b);
-      })
-    }, (a,b) => {
-      console.log(a);
-    }, (a,b) => {
-      console.log('successfully created tables');
-      deferred.resolve(true)
+          return acc;
+        }, {});
+      });
+    }, (err) => {
+      deferred.reject(err);
+    }, () => {
+      deferred.resolve(returnValue);
     });
+
     return deferred.promise;
-  }
-
-  static destroyTables() {
-    const db = SQLite.openDatabase('db.db');
-    return db.transaction((tx) => {
-      tx.executeSql('DROP TABLE IF EXISTS watch_lists')
-      tx.executeSql('DROP TABLE IF EXISTS stocks')
-      tx.executeSql('DROP TABLE IF EXISTS watch_lists_stocks')
-      tx.executeSql('DROP TABLE IF EXISTS tickers')
-      tx.executeSql('DROP TABLE IF EXISTS watch_lists_tickers')
-      tx.executeSql('select name from sqlite_master', [], (a,b) => {
-        console.log('WIPE OUT DATABASE');
-        console.log(b);
-      })
-    });
   }
 }

@@ -1,13 +1,14 @@
 import _ from 'lodash';
 import { AsyncStorage } from 'react-native';
 
+import Base from '../models/Base';
 import StockLink from '../models/StockLink';
 import Stock from '../models/Stock';
 import WatchList from '../models/WatchList';
 
 import { seeder, hydrate } from '../utils/seeder';
 
-import { defaultList, storage } from '../config/constants';
+import { defaultList, storage, url } from '../config/constants';
 
 export const ADD_STOCK = 'ADD_STOCK';
 export const CREATE_NEW_WATCH_LIST = 'CREATE_NEW_WATCH_LIST';
@@ -20,8 +21,7 @@ export const SEED_DEFAULT_WATCH_LIST = 'SEED_DEFAULT_WATCH_LIST';
 export const SET_SELECTED_WATCH_LIST = 'SET_SELECTED_WATCH_LIST';
 export const DELETE_WATCH_LIST = 'DELETE_WATCH_LIST';
 
-const baseUrl = 'https://api.iextrading.com/1.0/stock';
-const batch = `${baseUrl}/market/batch?symbols=`
+const batch = `${url.iex.base}/market/batch?symbols=`
 const typeQuote = `&types=quote`;
 
 export const setupDefaultWatchList = () => {
@@ -32,7 +32,7 @@ export const setupDefaultWatchList = () => {
       dispatch({ type: SEED_DEFAULT_WATCH_LIST });
 
       await AsyncStorage.setItem(storage.hasAlreadyLaunched, 'true');
-      await WatchList.setupTables();
+      await Base.setupTables();
 
       const watchList = await seeder(defaultList);
 
@@ -60,7 +60,7 @@ export const setupDefaultWatchList = () => {
 
 export const fetchWatchLists = async () => {
   return async (dispatch) => {
-    const rawWatchlists = await AsyncStorage.getItem(storage.watchlists)
+    const rawWatchlists = await AsyncStorage.getItem(storage.watchlists);
 
     const watchLists = JSON.parse(rawWatchlists);
 
@@ -88,7 +88,7 @@ export const addStock = (stock, watchList) => {
 }
 
 export const fetchStocks = (watchList) => {
-  return (dispatch) => {
+  return async (dispatch) => {
     if (!watchList) {
       return dispatch({
         type: RECEIVED_STOCKS,
@@ -102,29 +102,27 @@ export const fetchStocks = (watchList) => {
     if (_.isEmpty(tickers)) {
       return dispatch({
           type: RECEIVED_STOCKS,
-          stocks: []
-      })
+          stocks: {}
+      });
     }
 
-    return fetch(`${batch}${tickers}${typeQuote}`)
-      .then((item) => item.json())
-      .then((rawStocks) => {
-        const stocks = _.transform(rawStocks, (acc, { quote }, key) => {
-          acc[_.upperCase(key)] = {
-            ticker: _.upperCase(key),
-            bidPrice: quote.iexBidPrice,
-            askPrice: quote.iexAskPrice,
-            lastPrice: quote.latestPrice
-          };
+    const rawData = await fetch(`${batch}${tickers}${typeQuote}`);
+    const rawStocks = await rawData.json();
+    const stocks = _.transform(rawStocks, (acc, { quote }, key) => {
+      acc[_.upperCase(key)] = {
+        ticker: _.upperCase(key),
+        bidPrice: quote.iexBidPrice,
+        askPrice: quote.iexAskPrice,
+        lastPrice: quote.latestPrice
+      };
 
-          return acc;
-        }, {});
+      return acc;
+    }, {});
 
-        return dispatch({
-          type: RECEIVED_STOCKS,
-          stocks
-        });
-      });
+    return dispatch({
+      type: RECEIVED_STOCKS,
+      stocks
+    });
   }
 };
 
@@ -170,7 +168,6 @@ export const deleteStockByTicker = (ticker) => {
   return async (dispatch, getState) => {
     const stock = await new Stock({ ticker }).sync();
     const selected = getState().WatchList.selected;
-    // const toDelete = _.find(selected.stocksToWatch, (stockLink) => stockLink.stock.id === stock.id);
     selected.stocksToWatch = selected.stocksToWatch.filter((stockToWatch) => {
       return stockToWatch.stock.id !== stock.id
     });

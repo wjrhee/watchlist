@@ -3,16 +3,15 @@ import q from 'q';
 import { SQLite } from 'expo';
 
 import Base from './Base';
-import { tables } from '../config/constants';
+import { tables, url } from '../config/constants';
 
 export default class Stock extends Base {
   static fetchSearch(searchString) {
-    const searchUrl = 'https://trade.tastyworks.com/symbol_search/search';
     if (_.isEmpty(searchString)) {
       return q.resolve([]);
     };
 
-    return fetch(`${searchUrl}/${searchString}`)
+    return fetch(`${url.tastyworks.search}/${searchString}`)
       .then((res) => res.json())
       .then((results) => {
         const searchResults = results
@@ -26,7 +25,7 @@ export default class Stock extends Base {
       });
   }
 
-  constructor({ id, ticker, watchList, stock }) {
+  constructor({ id, ticker }) {
     super({ id, tableName: tables.stocks });
 
     this.ticker = ticker;

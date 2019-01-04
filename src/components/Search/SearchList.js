@@ -4,8 +4,6 @@ import { connect } from 'react-redux';
 import { FlatList, StyleSheet, Text, TouchableHighlight, View } from 'react-native';
 import Stock from '../../models/Stock';
 import { addStock } from '../../actions/WatchList';
-import { StackActions, NavigationActions } from 'react-navigation';
-import { routes } from '../../config/constants';
 
 const SearchList = ({ addStock, data, selectedWatchList, goBack }) => {
   const addToSelectedWatchList = async (ticker) => {

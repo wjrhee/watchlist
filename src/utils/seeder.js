@@ -1,7 +1,7 @@
+import _ from 'lodash';
 import WatchList from "../models/WatchList";
 import Stock from "../models/Stock";
 import StockLink from "../models/StockLink";
-import _ from 'lodash';
 
 export const seeder = async ({ name, tickers = [] }) => {
   const watchList = await new WatchList({ name }).save();

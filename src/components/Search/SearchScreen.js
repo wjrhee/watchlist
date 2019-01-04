@@ -1,8 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { connect } from 'react-redux';
-import { fetchSearch } from '../../actions/Stock';
-import { FlatList, Text, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import Stock from '../../models/Stock';
 import SearchList from './SearchList';
 

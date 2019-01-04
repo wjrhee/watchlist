@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import { SQLite } from 'expo';
 import q from 'q';
-// import hydrate from '../utils/seeder';
+import { SQLite } from 'expo';
+import { tables } from '../config/constants';
 
 export default class Base {
   constructor({ id, tableName }) {
@@ -63,35 +63,6 @@ export default class Base {
     return deferred.promise;
   }
 
-  create(params) {
-    if (this.id === null) {
-      const db = SQLite.openDatabase('db.db');
-      return db.transaction((tx) => {
-        const insertQuery = this._buildInsertQuery(_.keys(params));
-        tx.executeSql(insertQuery, lodsah.values(params))
-      });
-    }
-  }
-
-  update(attributes) {
-    const db = SQLite.openDatabase('db.db');
-    return db.transaction((tx) => {
-      // const updateQuery = this._buildUpdateQuery(attributes);
-      // tx.executeSql(`UPDATE ${this.tableName} SET `, [this.ticker])
-    });
-  }
-
-  fetch() {
-    const deferred = q.defer();
-    const db = SQLite.openDatabase('db.db');
-    db.transaction((tx) => {
-      tx.executeSql('SELECT * FROM watch_lists', [], (a,b) => {
-        console.log(b);
-      })
-    })
-
-  }
-
   _buildInsertQuery() {
     const properties = _.keys(this.apiMap);
     const queryPart = Array(properties.length).fill('?').join(',');
@@ -107,46 +78,47 @@ export default class Base {
     return `DELETE FROM ${this.tableName} WHERE id = ?`;
   }
 
-  static loadAll() {
-    const db = SQLite.openDatabase('db.db');
+  static setupTables() {
     const deferred = q.defer();
-    let returnValue;
-
+    const db = SQLite.openDatabase('db.db');
     db.transaction((tx) => {
       tx.executeSql(`
-        SELECT *
-        FROM watch_lists_stocks
-        INNER JOIN watch_lists ON watch_lists_stocks.watch_list_id = watch_lists.id
-        INNER JOIN stocks ON watch_lists_stocks.stock_id = stocks.id
-      `, null, (__, { rows }) => {
-        returnValue = _.reduce(rows._array, (acc, value) => {
-          if (acc[value.watch_list_id]) {
-            acc[value.watch_list_id].stocksToWatch.push({
-              stockToWatchId: value.id,
-              stockId: value.stock_id,
-              ticker: value.ticker
-            });
-          } else {
-            acc[value.watch_list_id] = {
-              name: value.name,
-              id: value.watch_list_id,
-              stocksToWatch: [{
-                stockToWatchId: value.id,
-                stockId: value.stock_id,
-                ticker: value.ticker
-              }]
-            };
-          };
+        CREATE TABLE IF NOT EXISTS ${tables.watchLists} (
+          id INTEGER PRIMARY KEY NOT NULL,
+          name TEXT
+        );
+      `)
 
-          return acc;
-        }, {});
-      });
-    }, (err) => {
-      deferred.reject(err);
+      tx.executeSql(`
+        CREATE TABLE IF NOT EXISTS ${tables.stocks} (
+          id INTEGER PRIMARY KEY NOT NULL,
+          ticker TEXT UNIQUE
+        );
+      `);
+
+      tx.executeSql(`
+        CREATE TABLE IF NOT EXISTS ${tables.watchListsStocks} (
+          id INTEGER PRIMARY KEY NOT NULL,
+          watch_list_id INTEGER,
+          stock_id INTEGER,
+          FOREIGN KEY (watch_list_id) REFERENCES ${tables.watchLists}(id),
+          FOREIGN KEY (stock_id) REFERENCES ${tables.stocks}(id)
+        );
+      `);
     }, () => {
-      deferred.resolve(returnValue);
+      console.log(a);
+    }, () => {
+      deferred.resolve(true)
     });
-
     return deferred.promise;
+  }
+
+  static destroyTables() {
+    const db = SQLite.openDatabase('db.db');
+    return db.transaction((tx) => {
+      tx.executeSql(`DROP TABLE IF EXISTS ${tables.watchLists}`);
+      tx.executeSql(`DROP TABLE IF EXISTS ${tables.stocks}`);
+      tx.executeSql(`DROP TABLE IF EXISTS ${tables.watchListsStocks}`);
+    });
   }
 }

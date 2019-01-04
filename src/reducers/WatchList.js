@@ -24,8 +24,6 @@ const watchList = (state = initialState, action) => {
         watchLists: [...state.watchLists, action.watchList]
       };
     case DELETE_WATCH_LIST:
-      // const newWatchLists = [...state.watchLists].filter(({ id }) => id !== action.watchListId);
-      // const newSelected = newWatchLists[0];
       return {
         ...state,
         watchLists: action.watchLists

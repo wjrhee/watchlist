@@ -20,5 +20,14 @@ export const routes = {
   Search: 'Search',
   Stock: 'Stock',
   WatchListList: 'WatchListList'
+};
+
+export const url = {
+  iex: {
+    base: 'https://api.iextrading.com/1.0/stock'
+  },
+  tastyworks: {
+    search: 'https://trade.tastyworks.com/symbol_search/search'
+  }
 }
 

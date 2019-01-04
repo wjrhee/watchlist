@@ -52,7 +52,6 @@ class WatchListListScreen extends React.Component {
       </View>
     );
 
-    console.log(this.props.watchLists.map(({ id }) => id))
     return (
       <View>
         <FlatList

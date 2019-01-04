@@ -5,7 +5,7 @@ import {
 } from '../actions/Stock';
 
 const initialState = {
-  stocks: []
+  stocks: {}
 };
 
 const stock = (state = initialState, action) => {
