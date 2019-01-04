@@ -80,32 +80,34 @@ export default class WatchList extends Base {
 
     db.transaction((tx) => {
       tx.executeSql(`
-        SELECT *
-        FROM ${tables.watchListsStocks}
-        INNER JOIN ${tables.watchLists} ON ${tables.watchListsStocks}.watch_list_id = ${tables.watchLists}.id
-        INNER JOIN ${tables.stocks} ON ${tables.watchListsStocks}.stock_id = ${tables.stocks}.id
-      `, null, (__, { rows }) => {
-        returnValue = _.reduce(rows._array, (acc, value) => {
-          if (acc[value.watch_list_id]) {
-            acc[value.watch_list_id].stocksToWatch.push({
+        SELECT id, name FROM watch_lists
+      `, null, (__, watchListQueryResults) => {
+        const watchListsRows = watchListQueryResults.rows._array;
+
+        tx.executeSql(`
+          SELECT *
+          FROM ${tables.watchListsStocks}
+          INNER JOIN ${tables.watchLists} ON ${tables.watchListsStocks}.watch_list_id = ${tables.watchLists}.id
+          INNER JOIN ${tables.stocks} ON ${tables.watchListsStocks}.stock_id = ${tables.stocks}.id
+        `, null, (__, { rows }) => {
+          returnValue = _.reduce(watchListsRows, (acc, value) => {
+            acc[value.id] = {
+              name: value.name,
+              id: value.id,
+              stocksToWatch: []
+            };
+
+            return acc;
+          }, {});
+
+          rows._array.forEach((value) => {
+            returnValue[value.watch_list_id].stocksToWatch.push({
               stockToWatchId: value.id,
               stockId: value.stock_id,
               ticker: value.ticker
             });
-          } else {
-            acc[value.watch_list_id] = {
-              name: value.name,
-              id: value.watch_list_id,
-              stocksToWatch: [{
-                stockToWatchId: value.id,
-                stockId: value.stock_id,
-                ticker: value.ticker
-              }]
-            };
-          };
-
-          return acc;
-        }, {});
+          });
+        });
       });
     }, (err) => {
       deferred.reject(err);

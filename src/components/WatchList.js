@@ -15,22 +15,23 @@ import { deleteStockByTicker } from '../actions/WatchList';
 const WatchList = (props) => {
   const renderItem = ({ item }) => {
     return (
-      <TouchableHighlight
-        onPress={ () => props.goToStock(item.ticker) }
-      >
-        <View style={ styles.listRow }>
-          <Text style={ styles.listItem }>{ item.ticker || '' }</Text>
-          <Text style={ styles.listItem }>{ item.askPrice || 'n/a' }</Text>
-          <Text style={ styles.listItem }>{ item.bidPrice || 'n/a' }</Text>
-          <Text style={ styles.listItem }>{ item.lastPrice || '' }</Text>
-          <Button
-            onPress={ () => props.deleteStockByTicker(item.ticker) }
-            title={ 'Delete' }
-            color={ '#FF0000' }
-            style={ styles.button }
-          />
-        </View>
-      </TouchableHighlight>
+      <View style={ styles.listRow }>
+        <TouchableHighlight
+          onPress={ () => props.goToStock(item.ticker) }
+          style={ styles.subRow }
+        >
+          <View style={ styles.subRowContainer }>
+            <Text style={ styles.listItem }>{ item.ticker }</Text>
+            <Text style={ styles.listItem }>{ item.askPrice }</Text>
+            <Text style={ styles.listItem }>{ item.bidPrice }</Text>
+            <Text style={ styles.listItem }>{ item.lastPrice }</Text>
+          </View>
+        </TouchableHighlight>
+        <TouchableHighlight
+          onPress={ () => props.deleteStockByTicker(item.ticker) }
+          style={ styles.delete }
+        ><Text>Delete</Text></TouchableHighlight>
+      </View>
     );
   };
 
@@ -43,7 +44,7 @@ const WatchList = (props) => {
           <Text style={ styles.headerItem } key={ header }>{ header }</Text>
         ))
       }
-      <Text style={ styles.lastItem }></Text>
+      <Text style={ styles.headerItemLast }></Text>
     </View>
   );
 
@@ -58,12 +59,12 @@ const WatchList = (props) => {
 };
 
 const styles = StyleSheet.create({
-  button: {
-    fontSize: 10,
-    width: 30
+  delete: {
+    flexBasis: 50
   },
   headerItem: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 0,
     fontSize: 14,
     justifyContent: 'flex-start'
   },
@@ -74,13 +75,22 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
     minHeight: 40
   },
+  subRow: {
+    flexGrow: 1,
+  },
+  subRowContainer: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    justifyContent: 'space-between'
+  },
   listItem: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 0,
     fontSize: 18,
     justifyContent: 'flex-start'
   },
-  lastItem: {
-    flex: 1
+  headerItemLast: {
+    flexBasis: 50
   }
 });
 

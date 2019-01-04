@@ -1,5 +1,14 @@
 import React from 'react';
-import { Button, FlatList, StyleSheet, Text, TextInput, TouchableHighlight, View } from 'react-native';
+import {
+  Button,
+  Dimensions,
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableHighlight,
+  View
+} from 'react-native';
 import { connect } from 'react-redux';
 
 import { createWatchList, deleteWatchList, setSelected } from '../../actions/WatchList';
@@ -25,14 +34,21 @@ class WatchListListScreen extends React.Component {
         <View style={ styles.listRow }>
           <TouchableHighlight
             onPress={ () => this.setSelected(item) }
+            style={ styles.listItem }
           >
-            <Text style={ styles.listItem }>{ item.name }</Text>
+            <Text
+              numberOfLines={ 1 }
+              style={ styles.listItemText }
+            >
+              { item.name }
+            </Text>
           </TouchableHighlight>
-          <Button
+          <TouchableHighlight
             onPress={ () => this.props.deleteWatchList(item) }
-            title={ 'Delete' }
-            color={ '#FF0000' }
-          />
+            style={ styles.delete }
+          >
+            <Text>DELETE</Text>
+          </TouchableHighlight>
         </View>
       )
     };
@@ -47,13 +63,13 @@ class WatchListListScreen extends React.Component {
         <Button
           onPress={ () => this.props.createWatchList(this.state.newWatchListName) }
           title={ 'Add Watch List' }
-          color={ '#FF0000' }
+          color={ '#AAAAAA' }
         />
       </View>
     );
 
     return (
-      <View>
+      <View style={ styles.listContainer }>
         <FlatList
           data={ this.props.watchLists }
           renderItem={ renderItem }
@@ -76,24 +92,47 @@ const mapDispatchToProps = {
 };
 
 const styles = StyleSheet.create({
+  delete: {
+    alignItems: 'center',
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 60
+  },
+  listContainer: {
+    paddingTop: 10,
+    paddingLeft: 20,
+    paddingRight: 20
+  },
   listRow: {
-    flex: 1,
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 'auto',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'stretch',
-    minHeight: 40
+    flexWrap: 'nowrap',
+    minHeight: 40,
+    paddingTop: 5,
+    paddingBottom: 5
   },
   listItem: {
-    flex: 1,
+    flexGrow: 1
+  },
+  listItemText: {
     fontSize: 18,
     flexGrow: 1,
+    maxWidth: Dimensions.get('window').width - (60 + 20 + 20 + 10),
     justifyContent: 'space-between',
     alignContent: 'stretch'
   },
   textInput: {
     minHeight: 30,
     borderColor: '#BBBBBB',
-    borderWidth: 1
+    borderWidth: 1,
+    paddingTop: 10,
+    paddingBottom: 10,
+    marginTop: 10,
+    marginBottom: 10
   }
 })
 

@@ -30,11 +30,17 @@ const SearchList = ({ addStock, data, selectedWatchList, goBack }) => {
       renderItem={ renderItem }
       data={ data }
       keyExtractor={ keyExtractor }
+      style={ styles.list }
     />
   )
 };
 
 const styles = StyleSheet.create({
+  list: {
+    paddingTop: 10,
+    paddingLeft: 20,
+    paddingRight: 20
+  },
   listRow: {
     flex: 1,
     flexDirection: 'row',

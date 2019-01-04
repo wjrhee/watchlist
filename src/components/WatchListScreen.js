@@ -57,7 +57,7 @@ export class WatchListScreen extends React.Component {
       <Button
         onPress={ this.goToSearch }
         title={ 'Stock Search' }
-        color={ '#FF0000' }
+        color={ '#AAAAAA' }
       />
     );
 
@@ -65,7 +65,7 @@ export class WatchListScreen extends React.Component {
       <Button
         onPress={ this.goToWatchListList }
         title={ 'Select Watch List' }
-        color={ '#FF0000' }
+        color={ '#AAAAAA' }
       />
     );
 
