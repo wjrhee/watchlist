@@ -17,7 +17,7 @@ export default class Base {
       tx.executeSql(deleteQuery, [this.id]);
     }, (err) => {
       deferred.reject(err);
-    }, (err) => {
+    }, () => {
       deferred.resolve(this);
     });
 
@@ -105,8 +105,8 @@ export default class Base {
           FOREIGN KEY (stock_id) REFERENCES ${tables.stocks}(id)
         );
       `);
-    }, () => {
-      console.log(a);
+    }, (err) => {
+      console.log(err);
     }, () => {
       deferred.resolve(true)
     });

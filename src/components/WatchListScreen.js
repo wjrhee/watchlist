@@ -20,10 +20,9 @@ export class WatchListScreen extends React.Component {
   }
 
   componentDidMount() {
-    // this.interval = setInterval(() => {
-    //   // TODO: BRING BACK TO REFRESH
-    //   this.props.fetchStocks(this.props.selected);
-    // }, 5000)
+    this.interval = setInterval(() => {
+      this.props.fetchStocks(this.props.selected);
+    }, 5000)
 
     this.props.setupDefaultWatchList().then(() => {
       if (this.props.selected) {
@@ -34,7 +33,7 @@ export class WatchListScreen extends React.Component {
   }
 
   componentWillUnmount() {
-    // clearInterval(this.interval);
+    clearInterval(this.interval);
   }
 
   goToStock(ticker) {
